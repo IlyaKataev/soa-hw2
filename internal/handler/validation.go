@@ -56,13 +56,13 @@ func (v *validator) err() error {
 	if len(v.errs) == 0 {
 		return nil
 	}
-	fields := make([]map[string]interface{}, len(v.errs))
+	fields := make([]map[string]any, len(v.errs))
 	for i, e := range v.errs {
-		fields[i] = map[string]interface{}{"field": e.Field, "message": e.Message}
+		fields[i] = map[string]any{"field": e.Field, "message": e.Message}
 	}
 	return apierr.NewWithDetails(apierr.ErrValidation,
 		"Ошибка валидации входных данных",
-		map[string]interface{}{"fields": fields})
+		map[string]any{"fields": fields})
 }
 
 func isPromoCodePattern(s string) bool {

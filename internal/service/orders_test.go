@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -22,12 +23,7 @@ func TestOrderStateMachine(t *testing.T) {
 
 	// Verify cancel is only allowed from CREATED and PAYMENT_PENDING
 	cancelAllowed := func(status string) bool {
-		for _, s := range allowed[status] {
-			if s == "CANCELED" {
-				return true
-			}
-		}
-		return false
+		return slices.Contains(allowed[status], "CANCELED")
 	}
 
 	assert.True(t, cancelAllowed("CREATED"))

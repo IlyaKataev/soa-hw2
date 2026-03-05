@@ -55,7 +55,7 @@ func TestJWT_SignAndValidate(t *testing.T) {
 	assert.NotEmpty(t, token)
 
 	parsed := &middleware.Claims{}
-	tok, err := jwt.ParseWithClaims(token, parsed, func(t *jwt.Token) (interface{}, error) {
+	tok, err := jwt.ParseWithClaims(token, parsed, func(t *jwt.Token) (any, error) {
 		return []byte(secret), nil
 	})
 	require.NoError(t, err)
@@ -77,7 +77,7 @@ func TestJWT_ExpiredToken(t *testing.T) {
 	require.NoError(t, err)
 
 	parsed := &middleware.Claims{}
-	_, err = jwt.ParseWithClaims(token, parsed, func(t *jwt.Token) (interface{}, error) {
+	_, err = jwt.ParseWithClaims(token, parsed, func(t *jwt.Token) (any, error) {
 		return []byte(secret), nil
 	})
 	require.Error(t, err)
@@ -95,7 +95,7 @@ func TestJWT_WrongSecret(t *testing.T) {
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte("correct-secret"))
 	require.NoError(t, err)
 
-	_, err = jwt.ParseWithClaims(token, &middleware.Claims{}, func(t *jwt.Token) (interface{}, error) {
+	_, err = jwt.ParseWithClaims(token, &middleware.Claims{}, func(t *jwt.Token) (any, error) {
 		return []byte("wrong-secret"), nil
 	})
 	require.Error(t, err, "wrong secret should fail validation")

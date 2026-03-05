@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"slices"
 
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
@@ -37,7 +38,7 @@ func errJSON(err error) api.ErrorResponse {
 			Message:   ae.Message,
 		}
 		if ae.Details != nil {
-			d := map[string]interface{}(ae.Details)
+			d := map[string]any(ae.Details)
 			resp.Details = &d
 		}
 		return resp
@@ -116,10 +117,8 @@ func userFromCtx(ctx context.Context) (id openapi_types.UUID, role string) {
 }
 
 func requireRole(role string, allowed ...string) error {
-	for _, r := range allowed {
-		if role == r {
-			return nil
-		}
+	if slices.Contains(allowed, role) {
+		return nil
 	}
 	return apierr.New(apierr.ErrAccessDenied, "Недостаточно прав для выполнения операции")
 }

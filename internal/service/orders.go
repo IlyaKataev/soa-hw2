@@ -68,7 +68,7 @@ func (s *OrderService) Create(ctx context.Context, in CreateOrderInput) (OrderWi
 		quantity int32
 	}
 	var entries []productEntry
-	var stockErrors []map[string]interface{}
+	var stockErrors []map[string]any
 
 	for _, item := range in.Items {
 		p, err := qtx.GetProductByIDForUpdate(ctx, item.ProductID)
@@ -82,7 +82,7 @@ func (s *OrderService) Create(ctx context.Context, in CreateOrderInput) (OrderWi
 			return OrderWithItems{}, apierr.New(apierr.ErrProductInactive, fmt.Sprintf("Товар %s неактивен", item.ProductID))
 		}
 		if p.Stock < item.Quantity {
-			stockErrors = append(stockErrors, map[string]interface{}{
+			stockErrors = append(stockErrors, map[string]any{
 				"product_id": item.ProductID.String(),
 				"requested":  item.Quantity,
 				"available":  p.Stock,
@@ -94,7 +94,7 @@ func (s *OrderService) Create(ctx context.Context, in CreateOrderInput) (OrderWi
 	if len(stockErrors) > 0 {
 		return OrderWithItems{}, apierr.NewWithDetails(apierr.ErrInsufficientStock,
 			"Недостаточно товара на складе",
-			map[string]interface{}{"items": stockErrors})
+			map[string]any{"items": stockErrors})
 	}
 
 	total := decimal.Zero
@@ -127,7 +127,7 @@ func (s *OrderService) Create(ctx context.Context, in CreateOrderInput) (OrderWi
 		if total.LessThan(promo.MinOrderAmount) {
 			return OrderWithItems{}, apierr.NewWithDetails(apierr.ErrPromoCodeMinAmount,
 				"Сумма заказа ниже минимальной для промокода",
-				map[string]interface{}{"min_order_amount": promo.MinOrderAmount.InexactFloat64()})
+				map[string]any{"min_order_amount": promo.MinOrderAmount.InexactFloat64()})
 		}
 
 		discount = calcDiscount(total, promo)
@@ -251,7 +251,7 @@ func (s *OrderService) Update(ctx context.Context, in UpdateOrderInput) (OrderWi
 		quantity int32
 	}
 	var entries []productEntry
-	var stockErrors []map[string]interface{}
+	var stockErrors []map[string]any
 
 	for _, item := range in.Items {
 		p, err := qtx.GetProductByIDForUpdate(ctx, item.ProductID)
@@ -265,7 +265,7 @@ func (s *OrderService) Update(ctx context.Context, in UpdateOrderInput) (OrderWi
 			return OrderWithItems{}, apierr.New(apierr.ErrProductInactive, fmt.Sprintf("Товар %s неактивен", item.ProductID))
 		}
 		if p.Stock < item.Quantity {
-			stockErrors = append(stockErrors, map[string]interface{}{
+			stockErrors = append(stockErrors, map[string]any{
 				"product_id": item.ProductID.String(),
 				"requested":  item.Quantity,
 				"available":  p.Stock,
@@ -276,7 +276,7 @@ func (s *OrderService) Update(ctx context.Context, in UpdateOrderInput) (OrderWi
 	if len(stockErrors) > 0 {
 		return OrderWithItems{}, apierr.NewWithDetails(apierr.ErrInsufficientStock,
 			"Недостаточно товара на складе",
-			map[string]interface{}{"items": stockErrors})
+			map[string]any{"items": stockErrors})
 	}
 
 	total := decimal.Zero
@@ -425,7 +425,7 @@ func (s *OrderService) checkRateLimit(ctx context.Context, userID uuid.UUID, opT
 		if time.Since(op.CreatedAt.Time) < limit {
 			remaining := int(limit.Seconds() - time.Since(op.CreatedAt.Time).Seconds())
 			return apierr.NewWithDetails(apierr.ErrOrderLimitExceeded, "Слишком частые запросы. Попробуйте позже",
-				map[string]interface{}{"retry_after_seconds": remaining})
+				map[string]any{"retry_after_seconds": remaining})
 		}
 	}
 	return nil

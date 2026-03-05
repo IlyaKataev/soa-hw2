@@ -127,8 +127,8 @@ func TestAppError_IsError(t *testing.T) {
 }
 
 func TestAppError_WithDetails(t *testing.T) {
-	details := map[string]interface{}{
-		"items": []map[string]interface{}{
+	details := map[string]any{
+		"items": []map[string]any{
 			{"product_id": "abc", "requested": 5, "available": 2},
 		},
 	}

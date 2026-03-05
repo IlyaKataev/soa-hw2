@@ -34,7 +34,7 @@ func Auth(secret string) func(http.Handler) http.Handler {
 
 			tokenStr := strings.TrimPrefix(header, "Bearer ")
 			claims := &Claims{}
-			token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
+			token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (any, error) {
 				if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, errors.New("unexpected signing method")
 				}
@@ -79,7 +79,7 @@ func RoleFromCtx(ctx context.Context) string {
 func writeAuthError(w http.ResponseWriter, code, msg string, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	resp := map[string]interface{}{
+	resp := map[string]any{
 		"error_code": code,
 		"message":    msg,
 	}

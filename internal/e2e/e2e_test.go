@@ -87,7 +87,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func do(t *testing.T, method, path string, body interface{}, token string) *http.Response {
+func do(t *testing.T, method, path string, body any, token string) *http.Response {
 	t.Helper()
 	var buf bytes.Buffer
 	if body != nil {
@@ -106,7 +106,7 @@ func do(t *testing.T, method, path string, body interface{}, token string) *http
 	return resp
 }
 
-func decodeJSON(t *testing.T, resp *http.Response, dst interface{}) {
+func decodeJSON(t *testing.T, resp *http.Response, dst any) {
 	t.Helper()
 	defer resp.Body.Close()
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(dst))
@@ -154,7 +154,7 @@ func TestAuth_DuplicateEmail(t *testing.T) {
 	resp := do(t, http.MethodPost, "/auth/register",
 		map[string]string{"email": "dup@example.com", "password": "password123", "role": "USER"}, "")
 	assert.Equal(t, http.StatusConflict, resp.StatusCode)
-	var body map[string]interface{}
+	var body map[string]any
 	decodeJSON(t, resp, &body)
 	assert.Equal(t, "USER_ALREADY_EXISTS", body["error_code"])
 }
@@ -173,7 +173,7 @@ func TestAuth_RefreshToken(t *testing.T) {
 func TestAuth_NoToken_Returns401(t *testing.T) {
 	resp := do(t, http.MethodGet, "/products", nil, "")
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
-	var body map[string]interface{}
+	var body map[string]any
 	decodeJSON(t, resp, &body)
 	assert.Equal(t, "TOKEN_INVALID", body["error_code"])
 }
@@ -190,7 +190,7 @@ type productResp struct {
 func createProduct(t *testing.T, sellerToken string, price float64, stock int) string {
 	t.Helper()
 	resp := do(t, http.MethodPost, "/products",
-		map[string]interface{}{
+		map[string]any{
 			"name":     "Product-" + t.Name(),
 			"price":    price,
 			"stock":    stock,
@@ -207,13 +207,13 @@ func TestProducts_CRUD(t *testing.T) {
 	userTokens := register(t, "user-crud@example.com", "password123", "USER")
 
 	resp := do(t, http.MethodPost, "/products",
-		map[string]interface{}{"name": "Gadget", "price": 99.99, "stock": 10, "category": "Electronics"},
+		map[string]any{"name": "Gadget", "price": 99.99, "stock": 10, "category": "Electronics"},
 		userTokens.AccessToken)
 	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 	resp.Body.Close()
 
 	resp = do(t, http.MethodPost, "/products",
-		map[string]interface{}{"name": "Laptop", "price": 1299.99, "stock": 5, "category": "Electronics"},
+		map[string]any{"name": "Laptop", "price": 1299.99, "stock": 5, "category": "Electronics"},
 		sellerTokens.AccessToken)
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
 	var created productResp
@@ -240,7 +240,7 @@ func TestProducts_CRUD(t *testing.T) {
 	assert.Equal(t, productID, fetched.ID)
 
 	resp = do(t, http.MethodPut, "/products/"+productID,
-		map[string]interface{}{"name": "Laptop Pro", "price": 1499.99, "stock": 3, "category": "Electronics", "status": "ACTIVE"},
+		map[string]any{"name": "Laptop Pro", "price": 1499.99, "stock": 3, "category": "Electronics", "status": "ACTIVE"},
 		sellerTokens.AccessToken)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	var updated productResp
@@ -263,7 +263,7 @@ func TestProducts_NotFound(t *testing.T) {
 	tokens := register(t, "user-nf@example.com", "password123", "USER")
 	resp := do(t, http.MethodGet, "/products/00000000-0000-0000-0000-000000000000", nil, tokens.AccessToken)
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
-	var body map[string]interface{}
+	var body map[string]any
 	decodeJSON(t, resp, &body)
 	assert.Equal(t, "PRODUCT_NOT_FOUND", body["error_code"])
 }
@@ -286,8 +286,8 @@ func TestOrders_CreateHappyPath(t *testing.T) {
 	productID := createProduct(t, sellerTokens.AccessToken, 100.0, 10)
 
 	resp := do(t, http.MethodPost, "/orders",
-		map[string]interface{}{
-			"items": []map[string]interface{}{
+		map[string]any{
+			"items": []map[string]any{
 				{"product_id": productID, "quantity": 2},
 			},
 		}, userTokens.AccessToken)
@@ -308,13 +308,13 @@ func TestOrders_InsufficientStock(t *testing.T) {
 	productID := createProduct(t, sellerTokens.AccessToken, 50.0, 3)
 
 	resp := do(t, http.MethodPost, "/orders",
-		map[string]interface{}{
-			"items": []map[string]interface{}{
+		map[string]any{
+			"items": []map[string]any{
 				{"product_id": productID, "quantity": 100},
 			},
 		}, userTokens.AccessToken)
 	assert.Equal(t, http.StatusConflict, resp.StatusCode)
-	var body map[string]interface{}
+	var body map[string]any
 	decodeJSON(t, resp, &body)
 	assert.Equal(t, "INSUFFICIENT_STOCK", body["error_code"])
 }
@@ -326,19 +326,19 @@ func TestOrders_RateLimit(t *testing.T) {
 
 	// First order — succeeds
 	resp := do(t, http.MethodPost, "/orders",
-		map[string]interface{}{
-			"items": []map[string]interface{}{{"product_id": productID, "quantity": 1}},
+		map[string]any{
+			"items": []map[string]any{{"product_id": productID, "quantity": 1}},
 		}, userTokens.AccessToken)
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
 	resp.Body.Close()
 
 	// Second order within the same minute — rate limited
 	resp = do(t, http.MethodPost, "/orders",
-		map[string]interface{}{
-			"items": []map[string]interface{}{{"product_id": productID, "quantity": 1}},
+		map[string]any{
+			"items": []map[string]any{{"product_id": productID, "quantity": 1}},
 		}, userTokens.AccessToken)
 	assert.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
-	var body map[string]interface{}
+	var body map[string]any
 	decodeJSON(t, resp, &body)
 	assert.Equal(t, "ORDER_LIMIT_EXCEEDED", body["error_code"])
 }
@@ -349,8 +349,8 @@ func TestOrders_GetAndCancel(t *testing.T) {
 	productID := createProduct(t, sellerTokens.AccessToken, 75.0, 5)
 
 	resp := do(t, http.MethodPost, "/orders",
-		map[string]interface{}{
-			"items": []map[string]interface{}{{"product_id": productID, "quantity": 2}},
+		map[string]any{
+			"items": []map[string]any{{"product_id": productID, "quantity": 2}},
 		}, userTokens.AccessToken)
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
 	var order orderResp
@@ -381,8 +381,8 @@ func TestOrders_OwnershipViolation(t *testing.T) {
 	productID := createProduct(t, sellerTokens.AccessToken, 10.0, 20)
 
 	resp := do(t, http.MethodPost, "/orders",
-		map[string]interface{}{
-			"items": []map[string]interface{}{{"product_id": productID, "quantity": 1}},
+		map[string]any{
+			"items": []map[string]any{{"product_id": productID, "quantity": 1}},
 		}, user1.AccessToken)
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
 	var order orderResp
@@ -399,7 +399,7 @@ func TestPromoCode_PercentageDiscount(t *testing.T) {
 	userTokens := register(t, "user-promo@example.com", "password123", "USER")
 
 	resp := do(t, http.MethodPost, "/promo-codes",
-		map[string]interface{}{
+		map[string]any{
 			"code":             "SAVE20",
 			"discount_type":    "PERCENTAGE",
 			"discount_value":   20,
@@ -414,8 +414,8 @@ func TestPromoCode_PercentageDiscount(t *testing.T) {
 	productID := createProduct(t, sellerTokens.AccessToken, 100.0, 10)
 
 	resp = do(t, http.MethodPost, "/orders",
-		map[string]interface{}{
-			"items":      []map[string]interface{}{{"product_id": productID, "quantity": 1}},
+		map[string]any{
+			"items":      []map[string]any{{"product_id": productID, "quantity": 1}},
 			"promo_code": "SAVE20",
 		}, userTokens.AccessToken)
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
@@ -432,12 +432,12 @@ func TestPromoCode_InvalidCode(t *testing.T) {
 	productID := createProduct(t, sellerTokens.AccessToken, 50.0, 5)
 
 	resp := do(t, http.MethodPost, "/orders",
-		map[string]interface{}{
-			"items":      []map[string]interface{}{{"product_id": productID, "quantity": 1}},
+		map[string]any{
+			"items":      []map[string]any{{"product_id": productID, "quantity": 1}},
 			"promo_code": "NOSUCHCODE",
 		}, userTokens.AccessToken)
 	assert.Equal(t, http.StatusUnprocessableEntity, resp.StatusCode)
-	var body map[string]interface{}
+	var body map[string]any
 	decodeJSON(t, resp, &body)
 	assert.Equal(t, "PROMO_CODE_INVALID", body["error_code"])
 }
@@ -448,8 +448,8 @@ func TestOrder_CannotCancelTwice(t *testing.T) {
 	productID := createProduct(t, sellerTokens.AccessToken, 30.0, 10)
 
 	resp := do(t, http.MethodPost, "/orders",
-		map[string]interface{}{
-			"items": []map[string]interface{}{{"product_id": productID, "quantity": 1}},
+		map[string]any{
+			"items": []map[string]any{{"product_id": productID, "quantity": 1}},
 		}, userTokens.AccessToken)
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
 	var order orderResp
@@ -463,7 +463,7 @@ func TestOrder_CannotCancelTwice(t *testing.T) {
 	// Second cancel → 409 INVALID_STATE_TRANSITION (no exit from CANCELED)
 	resp = do(t, http.MethodPost, "/orders/"+order.ID+"/cancel", nil, userTokens.AccessToken)
 	assert.Equal(t, http.StatusConflict, resp.StatusCode)
-	var body map[string]interface{}
+	var body map[string]any
 	decodeJSON(t, resp, &body)
 	assert.Equal(t, "INVALID_STATE_TRANSITION", body["error_code"])
 }
@@ -471,7 +471,7 @@ func TestOrder_CannotCancelTwice(t *testing.T) {
 func TestRBAC_UserCannotCreatePromoCode(t *testing.T) {
 	userTokens := register(t, "user-rbac1@example.com", "password123", "USER")
 	resp := do(t, http.MethodPost, "/promo-codes",
-		map[string]interface{}{
+		map[string]any{
 			"code":           "HACK",
 			"discount_type":  "FIXED_AMOUNT",
 			"discount_value": 10,
@@ -489,7 +489,7 @@ func TestRBAC_SellerCannotModifyOtherSellerProduct(t *testing.T) {
 	productID := createProduct(t, seller1.AccessToken, 20.0, 5)
 
 	resp := do(t, http.MethodPut, "/products/"+productID,
-		map[string]interface{}{
+		map[string]any{
 			"name": "Hijacked", "price": 1.0, "stock": 100, "category": "X", "status": "ACTIVE",
 		}, seller2.AccessToken)
 	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
@@ -502,7 +502,7 @@ func TestRBAC_AdminCanModifyAnyProduct(t *testing.T) {
 	productID := createProduct(t, sellerTokens.AccessToken, 50.0, 10)
 
 	resp := do(t, http.MethodPut, "/products/"+productID,
-		map[string]interface{}{
+		map[string]any{
 			"name": "Admin Updated", "price": 99.0, "stock": 7, "category": "General", "status": "ACTIVE",
 		}, adminTokens.AccessToken)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)

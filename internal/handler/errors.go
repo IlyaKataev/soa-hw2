@@ -14,16 +14,16 @@ func RequestErrorHandler(w http.ResponseWriter, r *http.Request, err error) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusBadRequest)
 
-	var fields []map[string]interface{}
+	var fields []map[string]any
 	var typeErr *json.UnmarshalTypeError
 	if errors.As(err, &typeErr) {
-		fields = []map[string]interface{}{{
+		fields = []map[string]any{{
 			"field":   typeErr.Field,
 			"message": fmt.Sprintf("expected %s, got %s", typeErr.Type, typeErr.Value),
 		}}
 	}
 
-	details := map[string]interface{}{"fields": fields, "error": err.Error()}
+	details := map[string]any{"fields": fields, "error": err.Error()}
 	resp := api.ErrorResponse{
 		ErrorCode: apierr.ErrValidation,
 		Message:   "Ошибка валидации входных данных",

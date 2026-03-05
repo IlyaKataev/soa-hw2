@@ -26,7 +26,7 @@ type AppError struct {
 	ErrorCode  string
 	Message    string
 	HTTPStatus int
-	Details    map[string]interface{}
+	Details    map[string]any
 }
 
 func (e *AppError) Error() string { return e.Message }
@@ -60,7 +60,7 @@ func New(code, message string) *AppError {
 	}
 }
 
-func NewWithDetails(code, message string, details map[string]interface{}) *AppError {
+func NewWithDetails(code, message string, details map[string]any) *AppError {
 	return &AppError{
 		ErrorCode:  code,
 		Message:    message,

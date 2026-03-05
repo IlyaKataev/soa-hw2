@@ -79,7 +79,7 @@ func isMutating(method string) bool {
 
 // maskSensitive removes password fields from JSON body before logging.
 func maskSensitive(body []byte) string {
-	var m map[string]interface{}
+	var m map[string]any
 	if err := json.Unmarshal(body, &m); err != nil {
 		return string(body)
 	}

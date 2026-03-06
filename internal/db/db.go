@@ -15,7 +15,6 @@ func NewPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("parse db dsn: %w", err)
 	}
 
-	// Register shopspring/decimal type codec so pgx can scan NUMERIC into decimal.Decimal
 	cfg.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
 		pgxdecimal.Register(conn.TypeMap())
 		return nil

@@ -17,7 +17,7 @@ import (
 const ctxLogCtx contextKey = "log_ctx"
 
 // requestLogCtx is a mutable holder placed in context by Logger so that
-// downstream middleware (e.g. Auth) can back-fill the authenticated user_id.
+// downstream middleware can back-fill the authenticated user_id.
 type requestLogCtx struct {
 	UserID uuid.UUID
 }
@@ -69,7 +69,7 @@ func Logger(next http.Handler) http.Handler {
 		}
 
 		evt.Msg("request")
-		_ = zerolog.GlobalLevel() // suppress unused import
+		_ = zerolog.GlobalLevel()
 	})
 }
 
@@ -77,7 +77,6 @@ func isMutating(method string) bool {
 	return method == http.MethodPost || method == http.MethodPut || method == http.MethodDelete
 }
 
-// maskSensitive removes password fields from JSON body before logging.
 func maskSensitive(body []byte) string {
 	var m map[string]any
 	if err := json.Unmarshal(body, &m); err != nil {

@@ -52,14 +52,27 @@ func NewRouter(pool *pgxpool.Pool, cfg Config) http.Handler {
 
 	r := chi.NewRouter()
 	r.Use(chimw.Recoverer)
+	r.Use(chimw.AllowContentType("application/json"))
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+			if req.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			next.ServeHTTP(w, req)
+		})
+	})
 	r.Use(mw.Logger)
 
-	// Public auth routes — no JWT required
+	// Public auth routes, no JWT required
 	r.Post("/auth/register", wrapper.RegisterUser)
 	r.Post("/auth/login", wrapper.LoginUser)
 	r.Post("/auth/refresh", wrapper.RefreshToken)
 
-	// All other routes — JWT required
+	// All other routes, JWT required
 	r.Group(func(r chi.Router) {
 		r.Use(mw.Auth(cfg.JWTSecret))
 		r.Get("/products", wrapper.ListProducts)

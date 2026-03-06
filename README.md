@@ -26,7 +26,7 @@ make run
 make generate
 
 # Собрать бинарь
-make build   # → bin/server
+make build   # bin/server
 
 # Запустить (требует работающий PostgreSQL)
 DB_DSN="postgres://marketplace:marketplace@localhost:5432/marketplace?sslmode=disable" \
@@ -104,12 +104,12 @@ api/
   openapi.yaml            # OpenAPI 3.0 — source of truth
 cmd/server/main.go        # Точка входа
 internal/
-  api/                    # СГЕНЕРИРОВАНО (oapi-codegen) — в .gitignore
+  api/                    # СГЕНЕРИРОВАНО (oapi-codegen), в .gitignore
   app/app.go              # Сборка роутера и RunMigrations
   apierr/                 # Типизированные бизнес-ошибки с HTTP-статусами
   config/                 # Конфигурация из env-переменных
   db/                     # pgxpool
-  db/sqlc/                # СГЕНЕРИРОВАНО (sqlc) — в .gitignore
+  db/sqlc/                # СГЕНЕРИРОВАНО (sqlc), в .gitignore
   db/queries/             # SQL-запросы для sqlc
   handler/                # HTTP-обработчики (реализуют StrictServerInterface)
   middleware/             # Logger (JSON) + Auth (JWT)

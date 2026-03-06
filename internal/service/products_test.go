@@ -34,7 +34,7 @@ func TestProductStatus_Transitions(t *testing.T) {
 	}{
 		{"ACTIVE", true},
 		{"INACTIVE", true},
-		{"ARCHIVED", true}, // idempotent
+		{"ARCHIVED", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.currentStatus, func(t *testing.T) {

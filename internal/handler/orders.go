@@ -72,7 +72,7 @@ func mapOrderCreateErr(err error) api.CreateOrderResponseObject {
 	case apierr.ErrAccessDenied:
 		return api.CreateOrder403JSONResponse{ForbiddenJSONResponse: api.ForbiddenJSONResponse(errJSON(err))}
 	}
-	return nil // will be handled as internal error
+	return nil
 }
 
 func (h *Handler) GetOrder(ctx context.Context, req api.GetOrderRequestObject) (api.GetOrderResponseObject, error) {

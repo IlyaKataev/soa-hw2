@@ -141,7 +141,6 @@ func TestAuth_RegisterAndLogin(t *testing.T) {
 	decodeJSON(t, resp, &loginResp)
 	assert.NotEmpty(t, loginResp.AccessToken)
 
-	// Login with wrong password → 401
 	resp = do(t, http.MethodPost, "/auth/login",
 		map[string]string{"email": "auth1@example.com", "password": "wrong"}, "")
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)

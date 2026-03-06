@@ -56,7 +56,6 @@ func Auth(secret string) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Back-fill user_id into the Logger's shared log context.
 			setLogUserID(r, userID)
 
 			ctx := context.WithValue(r.Context(), ctxUserID, userID)

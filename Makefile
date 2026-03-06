@@ -18,9 +18,9 @@ generate:
 build: generate
 	go build -o bin/server ./cmd/server
 
-# Run via docker-compose
+# Run via docker compose
 run:
-	docker-compose up --build
+	docker compose up --build -d
 
 # Run unit tests (exclude e2e)
 test:

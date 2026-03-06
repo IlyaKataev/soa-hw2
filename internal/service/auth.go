@@ -88,7 +88,6 @@ func (s *AuthService) RefreshTokens(ctx context.Context, refreshToken string) (T
 		return TokenPair{}, fmt.Errorf("get refresh token: %w", err)
 	}
 
-	// Delete old refresh token (rotation)
 	_ = s.q.DeleteRefreshToken(ctx, h)
 
 	userID := row.UserID
@@ -111,7 +110,6 @@ func (s *AuthService) issueTokens(ctx context.Context, userID uuid.UUID, role st
 		return TokenPair{}, fmt.Errorf("sign access token: %w", err)
 	}
 
-	// Refresh token — opaque random UUID
 	refreshToken := uuid.New().String() + "-" + uuid.New().String()
 	h := hashToken(refreshToken)
 

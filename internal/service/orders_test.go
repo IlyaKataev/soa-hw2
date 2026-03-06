@@ -21,7 +21,6 @@ func TestOrderStateMachine(t *testing.T) {
 		"CANCELED":        {},
 	}
 
-	// Verify cancel is only allowed from CREATED and PAYMENT_PENDING
 	cancelAllowed := func(status string) bool {
 		return slices.Contains(allowed[status], "CANCELED")
 	}
@@ -50,7 +49,7 @@ func TestCalcDiscount_Percentage(t *testing.T) {
 	}
 
 	discount := calcDiscountHelper(total, promo)
-	// 50% of 100 = 50, but cap at 70% → 50 ≤ 70, so discount = 50
+	// 50% of 100 = 50, but cap at 70%, 50 ≤ 70, so discount = 50
 	assert.True(t, decimal.NewFromFloat(50.0).Equal(discount), "expected 50, got %s", discount)
 }
 
@@ -89,7 +88,7 @@ func TestCalcDiscount_FixedExceedsTotal(t *testing.T) {
 }
 
 func TestRateLimit_NotExceeded(t *testing.T) {
-	lastOpAt := time.Now().Add(-2 * time.Minute) // 2 minutes ago
+	lastOpAt := time.Now().Add(-2 * time.Minute)
 	limit := 1 * time.Minute
 
 	exceeded := time.Since(lastOpAt) < limit

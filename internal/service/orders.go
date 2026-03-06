@@ -290,7 +290,6 @@ func (s *OrderService) Update(ctx context.Context, in UpdateOrderInput) (OrderWi
 		total = total.Add(entries[i].product.Price.Mul(decimal.NewFromInt(int64(entries[i].quantity))))
 	}
 
-	// 6. Recalculate promo code
 	discount := decimal.Zero
 	promoCodeID := order.PromoCodeID
 

@@ -69,7 +69,7 @@ func TestJWT_ExpiredToken(t *testing.T) {
 	claims := middleware.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   uuid.New().String(),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-1 * time.Hour)), // expired
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-1 * time.Hour)),
 		},
 	}
 
